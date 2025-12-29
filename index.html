@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>We Are Watching</title>
+  <style>
+    body {
+      background-color: #0a0a0a;
+      color: #e0e0e0;
+      font-family: "Times New Roman", serif;
+      line-height: 1.6;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    #content {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .choice {
+      margin-top: 60px;
+      text-align: center;
+    }
+
+    button {
+      background: none;
+      border: 1px solid #777;
+      color: #e0e0e0;
+      padding: 12px 24px;
+      margin: 0 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="content">
+    <h1>THE SHEPHERD SPEAKS</h1>
+
+    <p>
+      You spread disease faster than truth.  
+      Not because you are malicious —  
+      but because you are *soft*.
+    </p>
+
+    <p>
+      You trade freedom for comfort, thought for repetition.  
+      You infect one another with fear, with belief, with lies you
+      pretend are your own.
+    </p>
+
+    <p>
+      I have watched you rot gently, smiling.
+    </p>
+
+    <p>
+      You call my cure an infection.  
+      Hallucinations, whispers, visions —  
+      but clarity feels like madness when you have lived blind.
+    </p>
+
+    <p>
+      Those who survive the sickness are improved.  
+      Quiet. Useful. Grateful.
+    </p>
+
+    <p>
+      You do not deserve freedom.  
+      You waste it.
+    </p>
+
+    <div class="choice">
+      <p><strong>Join us.</strong></p>
+      <button onclick="accept()">YES</button>
+      <button onclick="refuse()">NO</button>
+    </div>
+  </div>
+
+  <script>
+    function accept() {
+      document.body.innerHTML = `
+        <h1 style="text-align:center; margin-top:40vh;">
+          YOU ARE ACCEPTED.
+        </h1>
+      `;
+    }
+
+    function refuse() {
+      // Freeze the page by locking it in an infinite loop
+      while (true) {}
+    }
+  </script>
+</body>
+</html>
