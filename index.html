@@ -1,4 +1,4 @@
-e<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -40,6 +40,18 @@ e<!DOCTYPE html>
     button:hover {
       border-color: #fff;
     }
+
+    /* New: ensure the goat image sits beneath the buttons and scales responsively */
+    .goat-image {
+      margin-top: 24px;
+      text-align: center;
+    }
+    .goat-image img {
+      display: inline-block;
+      max-width: 300px;
+      width: 100%;
+      height: auto;
+    }
   </style>
 </head>
 <body>
@@ -77,15 +89,18 @@ e<!DOCTYPE html>
       You do not deserve freedom.  
       You waste it.
     </p>
-<div class="choice">
-  <p><strong>Join us.</strong></p>
-  <button onclick="accept()">YES</button>
-  <button onclick="refuse()">NO</button>
-  <div style="margin-top:40px; text-align:center;">
-    <img src="goat-god.png" alt="Goat God" style="max-width:300px; width:100%; height:auto;">
-  </div>
-</div>
 
+    <div class="choice">
+      <p><strong>Join us.</strong></p>
+      <button onclick="accept()">YES</button>
+      <button onclick="refuse()">NO</button>
+
+      <!-- Image placed here directly beneath the buttons -->
+      <div class="goat-image" aria-hidden="false">
+        <img src="goat-god.png" alt="Goat God">
+      </div>
+    </div>
+  </div>
 
   <script>
     function accept() {
@@ -97,7 +112,6 @@ e<!DOCTYPE html>
     }
 
     function refuse() {
-    
       while (true) {}
     }
   </script>
