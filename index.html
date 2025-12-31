@@ -41,7 +41,7 @@
       border-color: #fff;
     }
 
-    /* New: ensure the goat image sits beneath the buttons and scales responsively */
+    /* Goat image */
     .goat-image {
       margin-top: 24px;
       text-align: center;
@@ -51,6 +51,34 @@
       max-width: 300px;
       width: 100%;
       height: auto;
+    }
+
+    /* -- New styles for refusal effect -- */
+    .red-text {
+      color: #ff3333 !important;
+    }
+
+    .flash-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background: rgba(255,0,0,0);
+      animation: flash 0.6s infinite;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes flash {
+      0%   { background: rgba(255,0,0,0); }
+      40%  { background: rgba(255,0,0,0.20); }
+      70%  { background: rgba(255,0,0,0.35); }
+      100% { background: rgba(255,0,0,0); }
+    }
+
+    /* small helper so disabled buttons look disabled */
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
     }
   </style>
 </head>
@@ -92,10 +120,9 @@
 
     <div class="choice">
       <p><strong>Join us.</strong></p>
-      <button onclick="accept()">YES</button>
-      <button onclick="refuse()">NO</button>
+      <button id="yesBtn" onclick="accept()">YES</button>
+      <button id="noBtn" onclick="refuse()">NO</button>
 
-      <!-- Image placed here directly beneath the buttons -->
       <div class="goat-image" aria-hidden="false">
         <img src="goat-god.png" alt="Goat God">
       </div>
@@ -103,7 +130,7 @@
   </div>
 
   <script>
-    // Accept: replace page with an acceptance message
+    // Accept: replace page with an acceptance message (unchanged behavior)
     function accept() {
       document.body.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0a0a;color:#e0e0e0;font-family:'Times New Roman', serif;">
@@ -112,38 +139,128 @@
       `;
     }
 
-    // Refuse: show a refusal message and a brief "scramble" effect on the text
+    // Refusal effect: wait, then scramble in-place, turn text red, and flash the screen
     function refuse() {
-      document.body.innerHTML = `
-        <div id="refusal" style="background:#0a0a0a;color:#e0e0e0;font-family:'Times New Roman', serif;min-height:100vh;padding:40px;box-sizing:border-box;">
-          <h1 style="text-align:center;margin-top:10vh;">YOU ARE REFUSED.</h1>
-          <p style="text-align:center;">We will watch.</p>
-        </div>
-      `;
+      // prevent multiple clicks
+      const yesBtn = document.getElementById('yesBtn');
+      const noBtn = document.getElementById('noBtn');
+      if (noBtn) noBtn.disabled = true;
+      if (yesBtn) yesBtn.disabled = true;
 
-      // Small text-scramble/glitch effect (optional)
-      const chars = "⍜⍾⍣⍧⍨⍩⍰⌇⌖⌁⌂⌗⟁⟟⟊⟒⟡⟢⟣⟥⟤⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽";
-      const container = document.getElementById('refusal');
-      if (!container) return;
-      const nodes = container.querySelectorAll('h1, p');
+      // small delay before anything happens (user requested "nothing happens for a few seconds")
+      const initialDelay = 2600; // ms
 
-      nodes.forEach(node => {
-        const original = node.textContent;
-        let elapsed = 0;
-        const duration = 1800 + Math.random() * 1200;
-        const step = 80;
-        const interval = setInterval(() => {
-          elapsed += step;
-          node.textContent = original.split('').map(ch => {
-            if (ch === ' ') return ' ';
-            return Math.random() < 0.35 ? chars[Math.floor(Math.random() * chars.length)] : ch;
-          }).join('');
-          if (elapsed >= duration) {
-            clearInterval(interval);
-            node.textContent = original;
-          }
-        }, step);
+      setTimeout(() => {
+        // 1) Make all page text red
+        const content = document.getElementById('content') || document.body;
+        content.classList.add('red-text');
+
+        // 2) Start screen flashing red (overlay)
+        startFlashingOverlay();
+
+        // 3) Scramble visible text nodes progressively
+        startScrambleEffect(content);
+      }, initialDelay);
+    }
+
+    // create and insert overlay that flashes red
+    function startFlashingOverlay() {
+      // If overlay exists, don't create another
+      if (document.querySelector('.flash-overlay')) return;
+      const overlay = document.createElement('div');
+      overlay.className = 'flash-overlay';
+      document.body.appendChild(overlay);
+
+      // optional: stop flashing after some time to avoid permanent annoyance
+      // If you want the flashing to stop after N seconds, uncomment below:
+      // setTimeout(() => overlay.remove(), 15000);
+    }
+
+    // Scramble textual content inside a container
+    function startScrambleEffect(container) {
+      // Symbol set for scramble
+      const symbols = "⍜⍾⍣⍧⍨⍩⍰⌇⌖⌁⌂⌗⟁⟟⟊⟒⟡⟢⟣⟥⟤⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽";
+      const elements = Array.from(container.querySelectorAll('h1, h2, h3, p, strong, em, li, button, a, span'));
+
+      // filter elements that actually have visible text content
+      const textElements = elements.filter(el => {
+        const t = el.textContent && el.textContent.trim();
+        return t && t.length > 0;
       });
+
+      // Stagger start times so scramble ripples through the page
+      textElements.forEach((el, idx) => {
+        const delay = idx * 180 + Math.random() * 300; // stagger slightly
+        setTimeout(() => scrambleElement(el, symbols), delay);
+      });
+    }
+
+    function scrambleElement(el, symbols) {
+      const original = el.textContent;
+      const len = original.length;
+      const duration = 2200 + Math.random() * 1600; // total time for this element to fully scramble
+      const intervalMs = 70;
+      let elapsed = 0;
+
+      // For aria-accessibility: keep aria-label while changing visible text
+      const aria = el.getAttribute('aria-label');
+
+      const interval = setInterval(() => {
+        elapsed += intervalMs;
+        const progress = Math.min(1, elapsed / duration);
+
+        // occasional "mumble..." flicker
+        if (Math.random() < 0.04) {
+          el.textContent = 'mumble...';
+          return;
+        }
+
+        // Build scrambled string based on progress
+        let out = '';
+        for (let i = 0; i < len; i++) {
+          const ch = original[i];
+          if (ch === ' ' || ch === '\n' || ch === '\t') {
+            out += ch;
+            continue;
+          }
+          // probability of being replaced increases with progress
+          const replaceProb = 0.18 + progress * 0.82; // starts low, approaches 1
+          if (Math.random() < replaceProb) {
+            // pick random symbol or lower-case mumble letters occasionally
+            if (Math.random() < 0.06) {
+              out += symbols.charAt(Math.floor(Math.random() * symbols.length));
+            } else if (Math.random() < 0.03) {
+              out += '.';
+            } else {
+              out += symbols.charAt(Math.floor(Math.random() * symbols.length));
+            }
+          } else {
+            // keep original character (maybe change case slightly)
+            out += ch;
+          }
+        }
+
+        el.textContent = out;
+
+        // ensure text color stays red (applies also if element had inline color)
+        el.style.color = '#ff3333';
+
+        if (elapsed >= duration) {
+          clearInterval(interval);
+          // final state: mostly symbols with occasional dots
+          let final = '';
+          for (let i = 0; i < len; i++) {
+            const ch = original[i];
+            if (ch === ' ' || ch === '\n' || ch === '\t') {
+              final += ch;
+            } else {
+              final += symbols.charAt(Math.floor(Math.random() * symbols.length));
+            }
+          }
+          el.textContent = final;
+          if (aria) el.setAttribute('aria-label', aria);
+        }
+      }, intervalMs);
     }
   </script>
 </body>
