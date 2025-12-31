@@ -54,8 +54,22 @@
     }
 
     /* -- New styles for refusal effect -- */
+    /* base red text state (keeps color) */
     .red-text {
       color: #ff3333 !important;
+    }
+
+    /* fast flashing between red and white for all text */
+    .flash-text {
+      animation: textFlash 180ms steps(1, end) infinite;
+      /* ensure it overrides inline coloring */
+      color: #ff3333 !important;
+    }
+
+    @keyframes textFlash {
+      0%   { color: #ff0000; }
+      50%  { color: #ffffff; }
+      100% { color: #ff0000; }
     }
 
     .flash-overlay {
@@ -87,13 +101,13 @@
     <h1>THE SHEPHERD SPEAKS</h1>
 
     <p>
-      You spread disease faster than truth.  
-      Not because you are malicious  
+      You spread disease faster than truth.  
+      Not because you are malicious  
       but because you are *soft*.
     </p>
 
     <p>
-      You trade freedom for comfort, thought for repetition.  
+      You trade freedom for comfort, thought for repetition.  
       You infect one another with fear, with belief, with lies you
       pretend are your own.
     </p>
@@ -103,18 +117,18 @@
     </p>
 
     <p>
-      You call my cure an infection.  
-      Hallucinations, whispers, visions 
+      You call my cure an infection.  
+      Hallucinations, whispers, visions 
       but clarity feels like madness when you have lived blind.
     </p>
 
     <p>
-      Those who survive the sickness are improved.  
+      Those who survive the sickness are improved.  
       Quiet. Useful. Grateful.
     </p>
 
     <p>
-      You do not deserve freedom.  
+      You do not deserve freedom.  
       You waste it.
     </p>
 
@@ -139,83 +153,124 @@
       `;
     }
 
-    // Refusal effect: wait, then scramble in-place, turn text red, and flash the screen
+    // Refusal effect: wait, then scramble in-place, turn text red, and flash the screen — now loops infinitely
     function refuse() {
       // prevent multiple clicks
       const yesBtn = document.getElementById('yesBtn');
       const noBtn = document.getElementById('noBtn');
-      if (noBtn) noBtn.disabled = true;
+      if (noBtn) {
+        if (noBtn.disabled) return; // already running
+        noBtn.disabled = true;
+      }
       if (yesBtn) yesBtn.disabled = true;
 
-      // small delay before anything happens (user requested "nothing happens for a few seconds")
+      // initial delay before effect begins
       const initialDelay = 2600; // ms
 
       setTimeout(() => {
-        // 1) Make all page text red
         const content = document.getElementById('content') || document.body;
-        content.classList.add('red-text');
 
-        // 2) Start screen flashing red (overlay)
+        // add classes to make text red and flashing
+        content.classList.add('red-text', 'flash-text');
+
+        // start screen flashing overlay
         startFlashingOverlay();
 
-        // 3) Scramble visible text nodes progressively
-        startScrambleEffect(content);
+        // start continuous scramble cycles
+        startContinuousScramble(content);
       }, initialDelay);
     }
 
     // create and insert overlay that flashes red
     function startFlashingOverlay() {
-      // If overlay exists, don't create another
       if (document.querySelector('.flash-overlay')) return;
       const overlay = document.createElement('div');
       overlay.className = 'flash-overlay';
       document.body.appendChild(overlay);
-
-      // optional: stop flashing after some time to avoid permanent annoyance
-      // If you want the flashing to stop after N seconds, uncomment below:
-      // setTimeout(() => overlay.remove(), 15000);
     }
 
-    // Scramble textual content inside a container
-    function startScrambleEffect(container) {
-      // Symbol set for scramble
+    // start scramble cycles for relevant elements inside container
+    function startContinuousScramble(container) {
       const symbols = "⍜⍾⍣⍧⍨⍩⍰⌇⌖⌁⌂⌗⟁⟟⟊⟒⟡⟢⟣⟥⟤⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽";
-      const elements = Array.from(container.querySelectorAll('h1, h2, h3, p, strong, em, li, button, a, span'));
+      const selectors = 'h1, h2, h3, p, strong, em, li, button, a, span';
+      const elements = Array.from(container.querySelectorAll(selectors));
 
-      // filter elements that actually have visible text content
+      // Filter to visible elements with text content
       const textElements = elements.filter(el => {
         const t = el.textContent && el.textContent.trim();
         return t && t.length > 0;
       });
 
-      // Stagger start times so scramble ripples through the page
+      // Initialize data-original for each element if not set
+      textElements.forEach(el => {
+        if (!el.dataset.original) {
+          el.dataset.original = el.textContent;
+        }
+      });
+
+      // Start looping scramble with a stagger so it ripples through the page
       textElements.forEach((el, idx) => {
-        const delay = idx * 180 + Math.random() * 300; // stagger slightly
-        setTimeout(() => scrambleElement(el, symbols), delay);
+        const startDelay = idx * 160 + Math.random() * 260;
+        setTimeout(() => loopScramble(el, symbols), startDelay);
       });
     }
 
-    function scrambleElement(el, symbols) {
-      const original = el.textContent;
+    // loopScramble: scrambles -> holds -> restores -> repeats
+    function loopScramble(el, symbols) {
+      const original = el.dataset.original || el.textContent;
+      // If original is empty, don't do anything
+      if (!original || original.trim().length === 0) {
+        // schedule next attempt later
+        setTimeout(() => loopScramble(el, symbols), 900 + Math.random() * 1200);
+        return;
+      }
+
+      // Individual cycle durations
+      const scrambleDuration = 1400 + Math.random() * 1600; // time it takes to scramble to symbols
+      const holdScrambled = 300 + Math.random() * 700; // how long scrambled stays
+      const restoreHold = 200 + Math.random() * 600; // how long original stays before next cycle
+      scrambleToSymbols(el, symbols, scrambleDuration, () => {
+        // after scrambled to symbols -> hold, then restore original briefly, then loop again
+        setTimeout(() => {
+          // restore original with brief flicker
+          el.textContent = original;
+          // small "mumble..." flicker occasionally
+          if (Math.random() < 0.25) {
+            setTimeout(() => { el.textContent = 'mumble...'; }, 80);
+            setTimeout(() => { el.textContent = original; }, 200 + Math.random() * 160);
+          }
+          // schedule next cycle
+          setTimeout(() => {
+            // slightly stagger next loop
+            loopScramble(el, symbols);
+          }, restoreHold);
+        }, holdScrambled);
+      });
+    }
+
+    // scrambleToSymbols: gradually replaces characters with symbols over duration, then calls callback
+    function scrambleToSymbols(el, symbols, duration, callback) {
+      const original = el.dataset.original || el.textContent;
       const len = original.length;
-      const duration = 2200 + Math.random() * 1600; // total time for this element to fully scramble
-      const intervalMs = 70;
+      const intervalMs = 60; // faster updates for a more urgent feel
       let elapsed = 0;
 
-      // For aria-accessibility: keep aria-label while changing visible text
-      const aria = el.getAttribute('aria-label');
+      // Clear any existing interval stored on element
+      if (el._scrambleInterval) {
+        clearInterval(el._scrambleInterval);
+        el._scrambleInterval = null;
+      }
 
-      const interval = setInterval(() => {
+      el._scrambleInterval = setInterval(() => {
         elapsed += intervalMs;
         const progress = Math.min(1, elapsed / duration);
 
-        // occasional "mumble..." flicker
-        if (Math.random() < 0.04) {
+        // occasional mumble flicker
+        if (Math.random() < 0.03) {
           el.textContent = 'mumble...';
           return;
         }
 
-        // Build scrambled string based on progress
         let out = '';
         for (let i = 0; i < len; i++) {
           const ch = original[i];
@@ -223,31 +278,23 @@
             out += ch;
             continue;
           }
-          // probability of being replaced increases with progress
-          const replaceProb = 0.18 + progress * 0.82; // starts low, approaches 1
+          // probability of replacement increases with progress
+          const replaceProb = 0.12 + progress * 0.88;
           if (Math.random() < replaceProb) {
-            // pick random symbol or lower-case mumble letters occasionally
-            if (Math.random() < 0.06) {
-              out += symbols.charAt(Math.floor(Math.random() * symbols.length));
-            } else if (Math.random() < 0.03) {
-              out += '.';
-            } else {
-              out += symbols.charAt(Math.floor(Math.random() * symbols.length));
-            }
+            out += symbols.charAt(Math.floor(Math.random() * symbols.length));
           } else {
-            // keep original character (maybe change case slightly)
             out += ch;
           }
         }
 
         el.textContent = out;
-
-        // ensure text color stays red (applies also if element had inline color)
-        el.style.color = '#ff3333';
+        // keep the per-element color consistent (flash is controlled by .flash-text)
+        el.style.color = ''; // let CSS animation handle color
 
         if (elapsed >= duration) {
-          clearInterval(interval);
-          // final state: mostly symbols with occasional dots
+          clearInterval(el._scrambleInterval);
+          el._scrambleInterval = null;
+          // final scrambled text
           let final = '';
           for (let i = 0; i < len; i++) {
             const ch = original[i];
@@ -258,7 +305,7 @@
             }
           }
           el.textContent = final;
-          if (aria) el.setAttribute('aria-label', aria);
+          if (typeof callback === 'function') callback();
         }
       }, intervalMs);
     }
