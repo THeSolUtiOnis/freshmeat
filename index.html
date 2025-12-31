@@ -59,13 +59,13 @@
     <h1>THE SHEPHERD SPEAKS</h1>
 
     <p>
-      You spread disease faster than truth.  
-      Not because you are malicious  
+      You spread disease faster than truth.  
+      Not because you are malicious  
       but because you are *soft*.
     </p>
 
     <p>
-      You trade freedom for comfort, thought for repetition.  
+      You trade freedom for comfort, thought for repetition.  
       You infect one another with fear, with belief, with lies you
       pretend are your own.
     </p>
@@ -75,18 +75,18 @@
     </p>
 
     <p>
-      You call my cure an infection.  
-      Hallucinations, whispers, visions 
+      You call my cure an infection.  
+      Hallucinations, whispers, visions 
       but clarity feels like madness when you have lived blind.
     </p>
 
     <p>
-      Those who survive the sickness are improved.  
+      Those who survive the sickness are improved.  
       Quiet. Useful. Grateful.
     </p>
 
     <p>
-      You do not deserve freedom.  
+      You do not deserve freedom.  
       You waste it.
     </p>
 
@@ -103,14 +103,48 @@
   </div>
 
   <script>
+    // Accept: replace page with an acceptance message
     function accept() {
       document.body.innerHTML = `
-        <h1 style="text-align:center; margin-top:40vh;">
-          YOU ARE ACCEPTED.
-        </h1>
+        <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0a0a;color:#e0e0e0;font-family:'Times New Roman', serif;">
+          <h1>YOU ARE ACCEPTED.</h1>
+        </div>
       `;
     }
 
-   
-  const elements = document.querySelectorAll("p, h1, h2, h3, button");function
-  const chars = "⍜⍾⍣⍧⍨⍩⍰⌇⌖⌁⌂⌗⟁⟟⟊⟒⟡⟢⟣⟥⟤⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽"; refuse() {
+    // Refuse: show a refusal message and a brief "scramble" effect on the text
+    function refuse() {
+      document.body.innerHTML = `
+        <div id="refusal" style="background:#0a0a0a;color:#e0e0e0;font-family:'Times New Roman', serif;min-height:100vh;padding:40px;box-sizing:border-box;">
+          <h1 style="text-align:center;margin-top:10vh;">YOU ARE REFUSED.</h1>
+          <p style="text-align:center;">We will watch.</p>
+        </div>
+      `;
+
+      // Small text-scramble/glitch effect (optional)
+      const chars = "⍜⍾⍣⍧⍨⍩⍰⌇⌖⌁⌂⌗⟁⟟⟊⟒⟡⟢⟣⟥⟤⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽";
+      const container = document.getElementById('refusal');
+      if (!container) return;
+      const nodes = container.querySelectorAll('h1, p');
+
+      nodes.forEach(node => {
+        const original = node.textContent;
+        let elapsed = 0;
+        const duration = 1800 + Math.random() * 1200;
+        const step = 80;
+        const interval = setInterval(() => {
+          elapsed += step;
+          node.textContent = original.split('').map(ch => {
+            if (ch === ' ') return ' ';
+            return Math.random() < 0.35 ? chars[Math.floor(Math.random() * chars.length)] : ch;
+          }).join('');
+          if (elapsed >= duration) {
+            clearInterval(interval);
+            node.textContent = original;
+          }
+        }, step);
+      });
+    }
+  </script>
+</body>
+</html>
