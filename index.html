@@ -1,228 +1,314 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8">
   <title>We Are Watching</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { background:#0a0a0a; color:#e8cfcf; font-family: "Times New Roman", serif; padding:28px; }
-    #content { max-width:920px; margin: 0 auto; }
-    h1 { text-align:center; color:#d35b5b; letter-spacing:2px; }
-    p { max-width:800px; margin:0.6em auto; color:#cfcfcf; }
-    .choice { margin-top:28px; text-align:center; }
-    button { background:none; border:1px solid #777; color:#e0e0e0; padding:10px 18px; margin:0 10px; cursor:pointer; }
-    button:hover { border-color:#fff; }
-    .goat-image { margin-top:20px; text-align:center; border-radius:8px; padding:12px; }
-    .goat-image img { display:inline-block; max-width:420px; width:100%; height:auto; transition:filter .2s ease; border-radius:6px; box-shadow:0 8px 30px rgba(0,0,0,.6); }
-    .controls { margin-top:12px; text-align:center; color:#ddd; }
-    .drop-hint { margin-top:10px; color:#bfbfbf; font-size:13px; }
-    .ui { margin-top:14px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-    textarea { width:100%; max-width:820px; height:120px; margin:12px auto; display:block; font-family:monospace; padding:8px; border-radius:6px; }
-    .download { margin-top:10px; display:block; text-align:center; color:#bfbfbf; font-size:13px; }
-    #fileInput { display:none; }
-    .hint { color:#a9a9a9; font-size:13px; text-align:center; margin-top:4px; }
+    body {
+      background-color: #0a0a0a;
+      color: #7b1e1e;
+      font-family: "Times New Roman", serif;
+      line-height: 1.6;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    #content {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .choice {
+      margin-top: 60px;
+      text-align: center;
+    }
+
+    button {
+      background: none;
+      border: 1px solid #777;
+      color: #e0e0e0;
+      padding: 12px 24px;
+      margin: 0 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #fff;
+    }
+
+    /* Goat image */
+    .goat-image {
+      margin-top: 24px;
+      text-align: center;
+    }
+    .goat-image img {
+      display: inline-block;
+      max-width: 300px;
+      width: 100%;
+      height: auto;
+    }
+
+    /* -- New styles for refusal effect -- */
+    /* base red text state (keeps color) */
+    .red-text {
+      color: #ff3333 !important;
+    }
+
+    /* fast flashing between red and white for all text */
+    .flash-text {
+      animation: textFlash 180ms steps(1, end) infinite;
+      /* ensure it overrides inline coloring */
+      color: #ff3333 !important;
+    }
+
+    @keyframes textFlash {
+      0%   { color: #ff0000; }
+      50%  { color: #ffffff; }
+      100% { color: #ff0000; }
+    }
+
+    .flash-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background: rgba(255,0,0,0);
+      animation: flash 0.6s infinite;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes flash {
+      0%   { background: rgba(255,0,0,0); }
+      40%  { background: rgba(255,0,0,0.20); }
+      70%  { background: rgba(255,0,0,0.35); }
+      100% { background: rgba(255,0,0,0); }
+    }
+
+    /* small helper so disabled buttons look disabled */
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
   <div id="content">
     <h1>THE SHEPHERD SPEAKS</h1>
 
-    <p>You spread disease faster than truth. Not because you are malicious but because you are <em>soft</em>.</p>
-    <p>You trade freedom for comfort, thought for repetition. You infect one another with fear, with belief, with lies you pretend are your own.</p>
-    <p>I have watched you rot gently, smiling.</p>
-    <p>You call my cure an infection. Hallucinations, whispers, visions — but clarity feels like madness when you have lived blind.</p>
-    <p>Those who survive the sickness are improved. Quiet. Useful. Grateful.</p>
-    <p>You do not deserve freedom. You waste it.</p>
+    <p>
+      You spread disease faster than truth.  
+      Not because you are malicious  
+      but because you are *soft*.
+    </p>
+
+    <p>
+      You trade freedom for comfort, thought for repetition.  
+      You infect one another with fear, with belief, with lies you
+      pretend are your own.
+    </p>
+
+    <p>
+      I have watched you rot gently, smiling.
+    </p>
+
+    <p>
+      You call my cure an infection.  
+      Hallucinations, whispers, visions 
+      but clarity feels like madness when you have lived blind.
+    </p>
+
+    <p>
+      Those who survive the sickness are improved.  
+      Quiet. Useful. Grateful.
+    </p>
+
+    <p>
+      You do not deserve freedom.  
+      You waste it.
+    </p>
 
     <div class="choice">
       <p><strong>Join us.</strong></p>
-      <button onclick="accept()">YES</button>
-      <button onclick="refuse()">NO</button>
+      <button id="yesBtn" onclick="accept()">YES</button>
+      <button id="noBtn" onclick="refuse()">NO</button>
 
-      <div class="goat-image" id="goatContainer" tabindex="0" role="img" aria-label="Goat God — drop an image here">
-        <!-- Default preview (transparent preview replacement) -->
-        <img id="goatImg" src="" alt="Goat God (drop or choose image to load)">
-        <div id="imgMissing" class="drop-hint">Drop an image here, click "Choose image", or paste base64 below to embed it.</div>
+      <div class="goat-image" aria-hidden="false">
+        <img src="goat-god.png" alt="Goat God">
       </div>
-
-      <div class="controls">
-        <div class="ui">
-          <label for="fileInput"><button id="chooseBtn">Choose image</button></label>
-          <input id="fileInput" type="file" accept="image/*">
-          <button id="pasteBtn">Use pasted base64</button>
-          <button id="downloadBtn" disabled>Download HTML with embedded image</button>
-        </div>
-        <div class="hint">You can drag & drop the preview image (or original PNG) from your computer onto the goat area.</div>
-      </div>
-
-      <textarea id="b64Area" placeholder="Or paste the single-line base64 string here (no data:image/... prefix)"></textarea>
-      <div class="download" id="downloadNotice" aria-live="polite"></div>
     </div>
   </div>
 
   <script>
-    const goatImg = document.getElementById('goatImg');
-    const goatContainer = document.getElementById('goatContainer');
-    const fileInput = document.getElementById('fileInput');
-    const chooseBtn = document.getElementById('chooseBtn');
-    const pasteBtn = document.getElementById('pasteBtn');
-    const b64Area = document.getElementById('b64Area');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const downloadNotice = document.getElementById('downloadNotice');
-    const imgMissing = document.getElementById('imgMissing');
-
-    // Fallback placeholder SVG when no image loaded
-    const placeholderSVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800">' +
-      '<rect width="100%" height="100%" fill="#0a0a0a"/>' +
-      '<text x="50%" y="50%" fill="#6b1b1b" font-size="20" text-anchor="middle" dominant-baseline="middle">' +
-      'Drop or choose an image to embed' +
-      '</text></svg>'
-    );
-
-    goatImg.src = placeholderSVG;
-
-    // Read File and set as data URL (single-line base64 embedded)
-    function readFileAndEmbed(file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result; // data:image/...
-        goatImg.src = dataUrl;
-        imgMissing.style.display = 'none';
-        downloadBtn.disabled = false;
-        downloadNotice.textContent = 'Image loaded. Click "Download HTML with embedded image" to save a self-contained page.';
-      };
-      reader.readAsDataURL(file);
+    // Accept: replace page with an acceptance message (unchanged behavior)
+    function accept() {
+      document.body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0a0a;color:#e0e0e0;font-family:'Times New Roman', serif;">
+          <h1>YOU ARE ACCEPTED.</h1>
+        </div>
+      `;
     }
 
-    // Drag & drop handlers
-    goatContainer.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      goatContainer.style.outline = '2px dashed #5b1b1b';
-    });
-    goatContainer.addEventListener('dragleave', () => {
-      goatContainer.style.outline = 'none';
-    });
-    goatContainer.addEventListener('drop', (e) => {
-      e.preventDefault();
-      goatContainer.style.outline = 'none';
-      const f = e.dataTransfer.files && e.dataTransfer.files[0];
-      if (f) readFileAndEmbed(f);
-    });
+    // Refusal effect: wait, then scramble in-place, turn text red, and flash the screen — now loops infinitely
+    function refuse() {
+      // prevent multiple clicks
+      const yesBtn = document.getElementById('yesBtn');
+      const noBtn = document.getElementById('noBtn');
+      if (noBtn) {
+        if (noBtn.disabled) return; // already running
+        noBtn.disabled = true;
+      }
+      if (yesBtn) yesBtn.disabled = true;
 
-    // File chooser
-    fileInput.addEventListener('change', () => {
-      const f = fileInput.files && fileInput.files[0];
-      if (f) readFileAndEmbed(f);
-    });
+      // initial delay before effect begins
+      const initialDelay = 2600; // ms
 
-    // Paste base64 button: take value from textarea
-    pasteBtn.addEventListener('click', () => {
-      const raw = b64Area.value.trim();
-      if (!raw) { alert('Paste the single-line base64 (no data: prefix) into the textarea first.'); return; }
-      // Build data URL assuming PNG — if your image is another type, edit manually
-      goatImg.src = 'data:image/png;base64,' + raw;
-      imgMissing.style.display = 'none';
-      downloadBtn.disabled = false;
-      downloadNotice.textContent = 'Base64 applied. Click "Download HTML with embedded image" to save a self-contained page.';
-    });
+      setTimeout(() => {
+        const content = document.getElementById('content') || document.body;
 
-    // Download an updated HTML file containing the embedded image (data URI)
-    downloadBtn.addEventListener('click', () => {
-      const currentSrc = goatImg.src;
-      if (!currentSrc || currentSrc === placeholderSVG) { alert('No embedded image found. Drop or choose an image first.'); return; }
+        // add classes to make text red and flashing
+        content.classList.add('red-text', 'flash-text');
 
-      // Build minimal HTML with image embedded, preserving the original layout and functionality
-      const newHtml = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<title>We Are Watching</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<style>
-  body { background:#0a0a0a; color:#e8cfcf; font-family:"Times New Roman",serif; padding:28px; }
-  #content { max-width:920px; margin:0 auto; }
-  h1 { text-align:center; color:#d35b5b; letter-spacing:2px; }
-  .choice { margin-top:28px; text-align:center; }
-  button { background:none; border:1px solid #777; color:#e0e0e0; padding:10px 18px; margin:0 10px; cursor:pointer; }
-  .goat-image { margin-top:20px; text-align:center; }
-  .goat-image img { max-width:420px; width:100%; height:auto; border-radius:6px; box-shadow:0 8px 30px rgba(0,0,0,.6); }
-</style>
-</head>
-<body>
-  <div id="content">
-    <h1>THE SHEPHERD SPEAKS</h1>
-    <p>You spread disease faster than truth. Not because you are malicious but because you are <em>soft</em>.</p>
-    <p>You trade freedom for comfort, thought for repetition. You infect one another with fear, with belief, with lies you pretend are your own.</p>
-    <p>I have watched you rot gently, smiling.</p>
-    <p>You call my cure an infection. Hallucinations, whispers, visions — but clarity feels like madness when you have lived blind.</p>
-    <p>Those who survive the sickness are improved. Quiet. Useful. Grateful.</p>
-    <p>You do not deserve freedom. You waste it.</p>
+        // start screen flashing overlay
+        startFlashingOverlay();
 
-    <div class="choice">
-      <p><strong>Join us.</strong></p>
-      <button onclick="accept()">YES</button>
-      <button onclick="refuse()">NO</button>
+        // start continuous scramble cycles
+        startContinuousScramble(content);
+      }, initialDelay);
+    }
 
-      <div class="goat-image">
-        <img id="goatImg" src="${currentSrc}" alt="Goat God">
-      </div>
-    </div>
-  </div>
+    // create and insert overlay that flashes red
+    function startFlashingOverlay() {
+      if (document.querySelector('.flash-overlay')) return;
+      const overlay = document.createElement('div');
+      overlay.className = 'flash-overlay';
+      document.body.appendChild(overlay);
+    }
 
-  <script>
-    function accept(){ document.body.innerHTML='<h1 style="text-align:center;margin-top:40vh;">YOU ARE ACCEPTED.</h1>'; }
-    function refuse(){ while(true){} }
-  </script>
-</body>
-</html>`;
+    // start scramble cycles for relevant elements inside container
+    function startContinuousScramble(container) {
+      const symbols = "⍜⍾⍣⍧⍨⍩⍰⌇⌖⌁⌂⌗⟁⟟⟊⟒⟡⟢⟣⟥⟤⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽";
+      const selectors = 'h1, h2, h3, p, strong, em, li, button, a, span';
+      const elements = Array.from(container.querySelectorAll(selectors));
 
-      const blob = new Blob([newHtml], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'index-embedded.html';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      downloadNotice.textContent = 'Downloaded index-embedded.html — open it to get the page with the image embedded.';
-    });
+      // Filter to visible elements with text content
+      const textElements = elements.filter(el => {
+        const t = el.textContent && el.textContent.trim();
+        return t && t.length > 0;
+      });
 
-    // Accessibility: support Ctrl+V paste into container (for users who copied image into clipboard)
-    goatContainer.addEventListener('paste', async (e) => {
-      const items = e.clipboardData && e.clipboardData.items;
-      if (!items) return;
-      for (const it of items) {
-        if (it.kind === 'file') {
-          const f = it.getAsFile();
-          if (f) { readFileAndEmbed(f); return; }
+      // Initialize data-original for each element if not set
+      textElements.forEach(el => {
+        if (!el.dataset.original) {
+          el.dataset.original = el.textContent;
         }
+      });
+
+      // Start looping scramble with a stagger so it ripples through the page
+      textElements.forEach((el, idx) => {
+        const startDelay = idx * 160 + Math.random() * 260;
+        setTimeout(() => loopScramble(el, symbols), startDelay);
+      });
+    }
+
+    // loopScramble: scrambles -> holds -> restores -> repeats
+    function loopScramble(el, symbols) {
+      const original = el.dataset.original || el.textContent;
+      // If original is empty, don't do anything
+      if (!original || original.trim().length === 0) {
+        // schedule next attempt later
+        setTimeout(() => loopScramble(el, symbols), 900 + Math.random() * 1200);
+        return;
       }
-    });
 
-    // Accept drop from browser images (image element dragged)
-    document.addEventListener('dragstart', (e) => {
-      // no-op
-    });
+      // Individual cycle durations
+      const scrambleDuration = 1400 + Math.random() * 1600; // time it takes to scramble to symbols
+      const holdScrambled = 300 + Math.random() * 700; // how long scrambled stays
+      const restoreHold = 200 + Math.random() * 600; // how long original stays before next cycle
+      scrambleToSymbols(el, symbols, scrambleDuration, () => {
+        // after scrambled to symbols -> hold, then restore original briefly, then loop again
+        setTimeout(() => {
+          // restore original with brief flicker
+          el.textContent = original;
+          // small "mumble..." flicker occasionally
+          if (Math.random() < 0.25) {
+            setTimeout(() => { el.textContent = 'mumble...'; }, 80);
+            setTimeout(() => { el.textContent = original; }, 200 + Math.random() * 160);
+          }
+          // schedule next cycle
+          setTimeout(() => {
+            // slightly stagger next loop
+            loopScramble(el, symbols);
+          }, restoreHold);
+        }, holdScrambled);
+      });
+    }
 
-    // Simple accept image load from a URL param ?img=DATA_URL or ?rawurl=encodedURL
-    (function checkQuery() {
-      const params = new URLSearchParams(location.search);
-      if (params.has('img')) {
-        try { goatImg.src = params.get('img'); imgMissing.style.display='none'; downloadBtn.disabled=false; } catch(e) {}
-      } else if (params.has('rawurl')) {
-        try {
-          const u = decodeURIComponent(params.get('rawurl'));
-          goatImg.src = u;
-          imgMissing.style.display='none';
-          downloadBtn.disabled=false;
-        } catch(e) {}
+    // scrambleToSymbols: gradually replaces characters with symbols over duration, then calls callback
+    function scrambleToSymbols(el, symbols, duration, callback) {
+      const original = el.dataset.original || el.textContent;
+      const len = original.length;
+      const intervalMs = 60; // faster updates for a more urgent feel
+      let elapsed = 0;
+
+      // Clear any existing interval stored on element
+      if (el._scrambleInterval) {
+        clearInterval(el._scrambleInterval);
+        el._scrambleInterval = null;
       }
-    })();
 
-    // accept fileInput label click
-    chooseBtn.addEventListener('click', () => fileInput.click());
+      el._scrambleInterval = setInterval(() => {
+        elapsed += intervalMs;
+        const progress = Math.min(1, elapsed / duration);
+
+        // occasional mumble flicker
+        if (Math.random() < 0.03) {
+          el.textContent = 'mumble...';
+          return;
+        }
+
+        let out = '';
+        for (let i = 0; i < len; i++) {
+          const ch = original[i];
+          if (ch === ' ' || ch === '\n' || ch === '\t') {
+            out += ch;
+            continue;
+          }
+          // probability of replacement increases with progress
+          const replaceProb = 0.12 + progress * 0.88;
+          if (Math.random() < replaceProb) {
+            out += symbols.charAt(Math.floor(Math.random() * symbols.length));
+          } else {
+            out += ch;
+          }
+        }
+
+        el.textContent = out;
+        // keep the per-element color consistent (flash is controlled by .flash-text)
+        el.style.color = ''; // let CSS animation handle color
+
+        if (elapsed >= duration) {
+          clearInterval(el._scrambleInterval);
+          el._scrambleInterval = null;
+          // final scrambled text
+          let final = '';
+          for (let i = 0; i < len; i++) {
+            const ch = original[i];
+            if (ch === ' ' || ch === '\n' || ch === '\t') {
+              final += ch;
+            } else {
+              final += symbols.charAt(Math.floor(Math.random() * symbols.length));
+            }
+          }
+          el.textContent = final;
+          if (typeof callback === 'function') callback();
+        }
+      }, intervalMs);
+    }
   </script>
 </body>
 </html>
