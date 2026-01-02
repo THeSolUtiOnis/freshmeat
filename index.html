@@ -51,6 +51,8 @@
       max-width: 300px;
       width: 100%;
       height: auto;
+      /* ensure image sits above background but below overlay */
+      z-index: 1;
     }
 
     /* -- New styles for refusal effect -- */
@@ -138,7 +140,10 @@
       <button id="noBtn" onclick="refuse()">NO</button>
 
       <div class="goat-image" aria-hidden="false">
-        <img src="goat-god.png" alt="Goat God">
+        <!-- Updated to use the new image you provided.
+             Put the image file in the same folder and name it goat-god-red.png,
+             or change the filename below to match your file. -->
+        <img id="goatImg" src="goat-god-red.png" alt="Red Goat God">
       </div>
     </div>
   </div>
@@ -153,7 +158,7 @@
       `;
     }
 
-    // Refusal effect: wait, then scramble in-place, turn text red, and flash the screen — now loops infinitely
+    // Refusal effect: wait, then scramble in-place, turn text red, and flash the screen — loops infinitely
     function refuse() {
       // prevent multiple clicks
       const yesBtn = document.getElementById('yesBtn');
