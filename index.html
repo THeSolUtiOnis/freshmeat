@@ -307,16 +307,57 @@
     ];
     const symbols = '⍜⍾⍣⍧⍨⍩⍰⌇⌖⌁⌂⌗⟁⟟⟊⟒⟡⟢⟣⟥⟤⟰⟱⟲⟳⟴⟵⟶⟷⟸⟹⟺⟻⟼⟽';
     let mistInterval = null;
+    let whisperInterval = null;
     let freezeScheduled = false;
+    let siteFrozen = false;
+    const activeTimeouts = new Set();
+    const scrambledElements = new Set();
+
+    function scheduleTimeout(callback, delay) {
+      if (siteFrozen) return null;
+      const id = setTimeout(() => {
+        activeTimeouts.delete(id);
+        if (siteFrozen) return;
+        callback();
+      }, delay);
+      activeTimeouts.add(id);
+      return id;
+    }
+
+    function clearAllEffects() {
+      siteFrozen = true;
+      freezeScheduled = true;
+
+      if (mistInterval) {
+        clearInterval(mistInterval);
+        mistInterval = null;
+      }
+      if (whisperInterval) {
+        clearInterval(whisperInterval);
+        whisperInterval = null;
+      }
+
+      activeTimeouts.forEach((id) => clearTimeout(id));
+      activeTimeouts.clear();
+
+      scrambledElements.forEach((el) => {
+        if (el && el._scrambleInterval) {
+          clearInterval(el._scrambleInterval);
+          el._scrambleInterval = null;
+        }
+      });
+      scrambledElements.clear();
+    }
 
     function startWhispers() {
       const el = document.getElementById('whisper');
       if (!el) return;
       let idx = 0;
-      setInterval(() => {
+      whisperInterval = setInterval(() => {
+        if (siteFrozen) return;
         idx = (idx + 1) % whispers.length;
         el.style.opacity = '0.2';
-        setTimeout(() => {
+        scheduleTimeout(() => {
           el.textContent = whispers[idx];
           el.style.opacity = '0.95';
         }, 140);
@@ -345,7 +386,7 @@
 
       const initialDelay = 2200;
 
-      setTimeout(() => {
+      scheduleTimeout(() => {
         const content = document.getElementById('content') || document.body;
         content.classList.add('red-text', 'flash-text');
         startFlashingOverlay();
@@ -374,18 +415,20 @@
         if (!el.dataset.original) {
           el.dataset.original = el.textContent;
         }
+        scrambledElements.add(el);
       });
 
       textElements.forEach((el, idx) => {
         const startDelay = idx * 160 + Math.random() * 260;
-        setTimeout(() => loopScramble(el, symbols), startDelay);
+        scheduleTimeout(() => loopScramble(el, symbols), startDelay);
       });
     }
 
     function loopScramble(el, symbols) {
+      if (siteFrozen || !el || !el.isConnected) return;
       const original = el.dataset.original || el.textContent;
       if (!original || original.trim().length === 0) {
-        setTimeout(() => loopScramble(el, symbols), 900 + Math.random() * 1200);
+        scheduleTimeout(() => loopScramble(el, symbols), 900 + Math.random() * 1200);
         return;
       }
 
@@ -393,13 +436,13 @@
       const holdScrambled = 300 + Math.random() * 700;
       const restoreHold = 200 + Math.random() * 600;
       scrambleToSymbols(el, symbols, scrambleDuration, () => {
-        setTimeout(() => {
+        scheduleTimeout(() => {
           el.textContent = original;
           if (Math.random() < 0.25) {
-            setTimeout(() => { el.textContent = 'mumble...'; }, 80);
-            setTimeout(() => { el.textContent = original; }, 200 + Math.random() * 160);
+            scheduleTimeout(() => { el.textContent = 'mumble...'; }, 80);
+            scheduleTimeout(() => { el.textContent = original; }, 200 + Math.random() * 160);
           }
-          setTimeout(() => {
+          scheduleTimeout(() => {
             loopScramble(el, symbols);
           }, restoreHold);
         }, holdScrambled);
@@ -418,6 +461,11 @@
       }
 
       el._scrambleInterval = setInterval(() => {
+        if (siteFrozen || !el.isConnected) {
+          clearInterval(el._scrambleInterval);
+          el._scrambleInterval = null;
+          return;
+        }
         elapsed += intervalMs;
         const progress = Math.min(1, elapsed / duration);
 
@@ -470,13 +518,14 @@
       document.body.appendChild(mist);
 
       mistInterval = setInterval(() => {
+        if (siteFrozen || !mist.isConnected) return;
         const glyph = document.createElement('span');
         glyph.textContent = symbols.charAt(Math.floor(Math.random() * symbols.length));
         glyph.style.left = `${Math.random() * 100}vw`;
         glyph.style.animationDuration = `${4 + Math.random() * 6}s`;
         glyph.style.fontSize = `${10 + Math.random() * 24}px`;
         mist.appendChild(glyph);
-        setTimeout(() => glyph.remove(), 10000);
+        scheduleTimeout(() => glyph.remove(), 10000);
       }, 120);
     }
 
@@ -486,18 +535,16 @@
       takeover.className = 'symbol-takeover';
       takeover.textContent = Array.from({ length: 20 }, () => symbols.charAt(Math.floor(Math.random() * symbols.length))).join(' ');
       document.body.appendChild(takeover);
-      setTimeout(() => takeover.classList.add('active', 'grow'), 20);
+      scheduleTimeout(() => takeover.classList.add('active', 'grow'), 20);
 
       if (!freezeScheduled) {
         freezeScheduled = true;
-        setTimeout(() => freezeWebsite(takeover), 6400);
+        scheduleTimeout(() => freezeWebsite(takeover), 6400);
       }
     }
 
     function freezeWebsite(takeover) {
-      if (mistInterval) {
-        clearInterval(mistInterval);
-      }
+      clearAllEffects();
       document.body.classList.add('site-frozen');
       if (takeover) {
         takeover.classList.remove('grow');
